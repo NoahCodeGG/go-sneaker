@@ -12,3 +12,4 @@
 *.out
 .go-version
 go.sum
+.idea

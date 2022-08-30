@@ -25,18 +25,18 @@ func NewPublisher(amqpUrl, exchangeName string) (*Publisher, error) {
 }
 
 // publish a worker queue
-func (c *Publisher) Publish(queueName, bodyContentType string, body []byte) error {
+func (c *Publisher) Publish(exchangeType ExchangeType, queueName, bodyContentType string, body []byte) error {
 	if bodyContentType == "" {
 		bodyContentType = "text/json"
 	}
 	err := c.Channel.ExchangeDeclare(
-		c.ExchangeName, // name
-		"direct",       // type
-		true,           // durable
-		false,          // auto-deleted
-		false,          // internal
-		false,          // no-wait
-		nil,            // arguments
+		c.ExchangeName,       // name
+		string(exchangeType), // type
+		true,                 // durable
+		false,                // auto-deleted
+		false,                // internal
+		false,                // no-wait
+		nil,                  // arguments
 	)
 	if err != nil {
 		return err
