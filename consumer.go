@@ -9,11 +9,12 @@ type Consumer struct {
 	Connection   *amqp.Connection
 	Channel      *amqp.Channel
 	ExchangeName string
+	ExchangeType ExchangeType
 }
 
 type fn func([]byte)
 
-func NewConsumer(amqpUrl, exchangeName string) (*Consumer, error) {
+func NewConsumer(amqpUrl, exchangeName string, exchangeType ExchangeType) (*Consumer, error) {
 	amqpConn, err := amqp.Dial(amqpUrl)
 	if err != nil {
 		return nil, err
@@ -26,7 +27,7 @@ func NewConsumer(amqpUrl, exchangeName string) (*Consumer, error) {
 		exchangeName = "go_sneaker"
 	}
 	consumer := Consumer{Connection: amqpConn,
-		Channel: channel, ExchangeName: exchangeName}
+		Channel: channel, ExchangeName: exchangeName, ExchangeType: exchangeType}
 	return &consumer, nil
 }
 
@@ -42,13 +43,13 @@ func (c *Consumer) Consume(queueName string, args map[string]interface{}, f fn) 
 		return err
 	}
 	err := c.Channel.ExchangeDeclare(
-		c.ExchangeName, // name
-		"direct",       // type
-		true,           // durable
-		false,          // auto-deleted
-		false,          // internal
-		false,          // no-wait
-		nil,            // arguments
+		c.ExchangeName,         // name
+		string(c.ExchangeType), // type
+		true,                   // durable
+		false,                  // auto-deleted
+		false,                  // internal
+		false,                  // no-wait
+		nil,                    // arguments
 	)
 	if err != nil {
 		return err
@@ -60,7 +61,7 @@ func (c *Consumer) Consume(queueName string, args map[string]interface{}, f fn) 
 		defaultArgs["autoDelete"].(bool), // delete when unused
 		defaultArgs["exclusive"].(bool),  // exclusive
 		defaultArgs["noWait"].(bool),     // no-wait
-		nil, // arguments
+		nil,                              // arguments
 	)
 
 	err = c.Channel.QueueBind(

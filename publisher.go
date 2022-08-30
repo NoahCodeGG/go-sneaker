@@ -8,9 +8,10 @@ type Publisher struct {
 	Connection   *amqp.Connection
 	Channel      *amqp.Channel
 	ExchangeName string
+	ExchangeType ExchangeType
 }
 
-func NewPublisher(amqpUrl, exchangeName string) (*Publisher, error) {
+func NewPublisher(amqpUrl, exchangeName string, exchangeType ExchangeType) (*Publisher, error) {
 	amqpConn, err := amqp.Dial(amqpUrl)
 	if err != nil {
 		return nil, err
@@ -20,23 +21,23 @@ func NewPublisher(amqpUrl, exchangeName string) (*Publisher, error) {
 	if err != nil {
 		return nil, err
 	}
-	publisher := Publisher{Connection: amqpConn, Channel: channel, ExchangeName: exchangeName}
+	publisher := Publisher{Connection: amqpConn, Channel: channel, ExchangeName: exchangeName, ExchangeType: exchangeType}
 	return &publisher, nil
 }
 
 // publish a worker queue
-func (c *Publisher) Publish(exchangeType ExchangeType, queueName, bodyContentType string, body []byte) error {
+func (c *Publisher) Publish(queueName, bodyContentType string, body []byte) error {
 	if bodyContentType == "" {
 		bodyContentType = "text/json"
 	}
 	err := c.Channel.ExchangeDeclare(
-		c.ExchangeName,       // name
-		string(exchangeType), // type
-		true,                 // durable
-		false,                // auto-deleted
-		false,                // internal
-		false,                // no-wait
-		nil,                  // arguments
+		c.ExchangeName,         // name
+		string(c.ExchangeType), // type
+		true,                   // durable
+		false,                  // auto-deleted
+		false,                  // internal
+		false,                  // no-wait
+		nil,                    // arguments
 	)
 	if err != nil {
 		return err
